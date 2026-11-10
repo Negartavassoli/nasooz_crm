@@ -3,651 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سامانه اتوماسیون و مکاتبات نسوز دانا</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Vazirmatn Font -->
-    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <style>
-        * {
-            font-family: 'Vazirmatn', sans-serif;
-        }
-        .bg-custom-dark {
-            background-color: #0f172a;
-        }
-        .card-header-gradient {
-            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
-        }
-        .btn-gradient {
-            background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
-        }
-        .btn-gradient:hover {
-            background: linear-gradient(90deg, #4338ca 0%, #4f46e5 100%);
-        }
-    </style>
-</head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-
-    <div id="app"></div>
-
-    <!-- React & Babel CDNs -->
+    <title>سامانه یکپارچه CRM و مکاتبات مکتوب - شرکت نسوز دانا</title>
+    <!-- React & Tailwind CDN -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <style>
+        body { font-family: 'Vazirmatn', sans-serif; background-color: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-800 antialiased min-h-screen">
+
+    <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState } = React;
 
-        // چارت سازمانی شرکت نسوز دانا
-        const ORGANIZATIONAL_CHART = [
-            "هیئت مدیره",
-            "مدیرعامل (مهندس دانایی)",
-            "مدیر کارخانه (مهندس اکبری)",
-            "مدیر مالی و اداری",
-            "مدیر بازرگانی و فروش",
-            "سرپرست انبار و مواد اولیه",
-            "سرپرست خط تولید و بچ‌سازی",
-            "واحد مهندسی و R&D",
-            "واحد کنترل کیفیت (QC)"
+        const ROLES = [
+            { id: 'CEO', title: 'مدیر عامل / رئیس هیئت مدیره', isMgr: true },
+            { id: 'COMMERCIAL_MGR', title: 'مدیر بازرگانی', isMgr: true },
+            { id: 'PLANT_MGR', title: 'مدیر کارخانه', isMgr: true },
+            { id: 'FINANCIAL_MGR', title: 'مدیر مالی', isMgr: true },
+            { id: 'PROJECT_SUP', title: 'سرپرست پروژه ها', isMgr: true },
+            { id: 'PROD_SUP', title: 'سرپرست تولید', isMgr: false },
+            { id: 'PM_SUP', title: 'سرپرست کارگاه ساخت و PM', isMgr: false },
+            { id: 'WH_SPEC', title: 'کارشناس انبار', isMgr: false },
+            { id: 'SALES_SPEC', title: 'کارشناس فروش', isMgr: false },
+            { id: 'PURCHASE_SPEC', title: 'کارشناس خرید', isMgr: false },
+            { id: 'ACC_SPEC', title: 'کارشناس حسابداری', isMgr: false }
         ];
 
-        // کاربران نمونه جهت ورود
-        const SAMPLE_USERS = [
-            { id: '1', username: 'admin', name: 'مدیر سیستم', role: 'مدیرعامل (مهندس دانایی)', isManager: true, active: true, pass: '123' },
-            { id: '2', username: 'akbari', name: 'مهندس اکبری', role: 'مدیر کارخانه (مهندس اکبری)', isManager: true, active: true, pass: '123' },
-            { id: '3', username: 's_amini', name: 'مریم امینی', role: 'مدیر بازرگانی و فروش', isManager: false, active: true, pass: '123' }
+        const INITIAL_USERS = [
+            { id: 1, name: 'مدیر سیستم', username: 'admin', password: '123', role: 'CEO', active: true },
+            { id: 2, name: 'مهندس اکبری', username: 'akbari', password: '123', role: 'PLANT_MGR', active: true },
+            { id: 3, name: 'سعید امینی', username: 's_amini', password: '123', role: 'SALES_SPEC', active: true }
         ];
 
-        // قالب‌های فرم آماده
         const INITIAL_TEMPLATES = [
-            { id: 1, title: 'استعلام امکان‌سنجی فنی R&D', receiver: 'واحد مهندسی و R&D', subject: 'بررسی فرمولاسیون پوشش پلیمری مخزن', text: 'با سلام، لطفاً امکان‌سنجی تولید پوشش پلیمری با تحمل حرارتی بالا جهت ارائه به مشتری بررسی گردد.' },
-            { id: 2, title: 'درخواست تأمین مواد اولیه انبار', receiver: 'سرپرست انبار و مواد اولیه', subject: 'تأمین رزین متال‌پایه بچ #902', text: 'احتراما درخواست تامین مواد اولیه رزین به میزان ۵۰۰ کیلوگرم برای خط تولید ارسال می‌گردد.' },
-            { id: 3, title: 'گزارش روزانه تولید بچ', receiver: 'مدیر کارخانه (مهندس اکبری)', subject: 'گزارش شیفت روزانه تولید نسوز', text: 'گزارش کارکرد شیفت روزانه: کلیه دستگاه‌ها فعال بوده و حجم تولید طبق برنامه محقق گردید.' }
+            {
+                id: 'TMPL-01',
+                title: 'استعلام امکان‌سنجی فنی (R&D)',
+                category: 'فروش و مهندسی',
+                body: 'احتراماً با توجه به استعلام دریافت شده از مشتری، لطفاً امکان‌سنجی فنی، برآورد مواد اولیه و مشخصات TDS محصول مورد نظر را حداکثر ظرف ۴۸ ساعت اعلام فرمایید.'
+            },
+            {
+                id: 'TMPL-02',
+                title: 'درخواست تأمین مواد اولیه / انبار',
+                category: 'تولید و انبار',
+                body: 'احتراماً خواهشمند است دستور فرمایید مواد اولیه طبق برآورد بچ تولیدی به میزان مشخص شده جهت شروع عملیات به خط تولید ارسال گردند.'
+            },
+            {
+                id: 'TMPL-03',
+                title: 'گزارش پیشرفت پروژه میدانی',
+                category: 'گزارش‌دهی پروژه',
+                body: 'گزارش روزانه عملیات سایت: آماده‌سازی سطح انجام شد، ضخامت‌سنجی و تست چسبندگی با موفقیت صورت پذیرفت و پروژه در مرحله تحویل موقت قرار دارد.'
+            }
         ];
 
-        function App() {
-            const [currentUser, setCurrentUser] = useState(null);
-            const [usernameInput, setUsernameInput] = useState('');
-            const [passwordInput, setPasswordInput] = useState('');
-            const [loginError, setLoginError] = useState('');
-
-            // وضعیت‌ها
-            const [activeTab, setActiveTab] = useState('letters'); // letters, templates, users
-            const [sidebarOpen, setSidebarOpen] = useState(false);
-            
-            // داده‌ها
-            const [letters, setLetters] = useState([
-                {
-                    id: 'ND-CR-1403-8821',
-                    sender: 'مریم امینی (مدیر بازرگانی)',
-                    receiver: 'واحد مهندسی و R&D',
-                    subject: 'استعلام امکان‌سنجی پوشش پلیمری مخزن',
-                    text: 'لطفا شرایط فنی و زمان‌بندی تولید محصول پوشش نسوز پلیمری را بررسی نمایید.',
-                    date: '۱۴۰۵/۰۸/۱۱',
-                    priority: 'فوری',
-                    status: 'در انتظار پاسخ',
-                    replies: []
-                }
-            ]);
-
-            const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
-            const [usersList, setUsersList] = useState(SAMPLE_USERS);
-
-            // فرم نامه جدید
-            const [newReceiver, setNewReceiver] = useState(ORGANIZATIONAL_CHART[0]);
-            const [newSubject, setNewSubject] = useState('');
-            const [newPriority, setNewPriority] = useState('عادی');
-            const [newText, setNewText] = useState('');
-
-            // پاسخ‌دهی
-            const [replyText, setReplyText] = useState({});
-            const [replyStatus, setReplyStatus] = useState({});
-
-            // ساخت فرم جدید توسط مدیر
-            const [newTplTitle, setNewTplTitle] = useState('');
-            const [newTplSubject, setNewTplSubject] = useState('');
-            const [newTplText, setNewTplText] = useState('');
-
-            // ورود به سیستم
-            const handleLogin = (e) => {
-                e.preventDefault();
-                const found = usersList.find(u => u.username === usernameInput && u.pass === passwordInput);
-                if (found) {
-                    if (!found.active) {
-                        setLoginError('حساب کاربری شما غیرفعال شده است.');
-                        return;
-                    }
-                    setCurrentUser(found);
-                    setLoginError('');
-                } else {
-                    setLoginError('نام کاربری یا رمز عبور اشتباه است.');
-                }
-            };
-
-            const handleLogout = () => {
-                setCurrentUser(null);
-                setUsernameInput('');
-                setPasswordInput('');
-            };
-
-            // ثبت نامه جدید
-            const handleSendLetter = (e) => {
-                e.preventDefault();
-                if (!newSubject || !newText) return;
-                const newDoc = {
-                    id: `ND-CR-1403-${Math.floor(1000 + Math.random() * 9000)}`,
-                    sender: `${currentUser.name} (${currentUser.role})`,
-                    receiver: newReceiver,
-                    subject: newSubject,
-                    text: newText,
-                    priority: newPriority,
-                    date: new Date().toLocaleDateString('fa-IR'),
-                    status: 'در انتظار پاسخ',
-                    replies: []
-                };
-                setLetters([newDoc, ...letters]);
-                setNewSubject('');
-                setNewText('');
-                alert('نامه با موفقیت ثبت و ارسال شد.');
-            };
-
-            // استفاده از قالب آماده
-            const applyTemplate = (tpl) => {
-                setNewReceiver(tpl.receiver);
-                setNewSubject(tpl.subject);
-                setNewText(tpl.text);
-                setActiveTab('letters');
-            };
-
-            // ارسال پاسخ نامه
-            const handleSendReply = (letterId) => {
-                const text = replyText[letterId];
-                if (!text) return;
-                const status = replyStatus[letterId] || 'پاسخ داده شده';
-
-                setLetters(letters.map(item => {
-                    if (item.id === letterId) {
-                        return {
-                            ...item,
-                            status: status,
-                            replies: [
-                                ...item.replies,
-                                {
-                                    sender: `${currentUser.name} (${currentUser.role})`,
-                                    text: text,
-                                    date: new Date().toLocaleDateString('fa-IR') + ' - ' + new Date().toLocaleTimeString('fa-IR', {hour:'2-digit', minute:'2-digit'})
-                                }
-                            ]
-                        };
-                    }
-                    return item;
-                }));
-
-                setReplyText({ ...replyText, [letterId]: '' });
-            };
-
-            // ساخت قالب جدید توسط مدیر
-            const handleCreateTemplate = (e) => {
-                e.preventDefault();
-                if (!newTplTitle || !newTplText) return;
-                const newTpl = {
-                    id: Date.now(),
-                    title: newTplTitle,
-                    receiver: ORGANIZATIONAL_CHART[0],
-                    subject: newTplSubject,
-                    text: newTplText
-                };
-                setTemplates([...templates, newTpl]);
-                setNewTplTitle('');
-                setNewTplSubject('');
-                setNewTplText('');
-                alert('فرم آماده جدید اضافه شد.');
-            };
-
-            // فعال/غیرفعال کردن کاربر
-            const toggleUserStatus = (userId) => {
-                setUsersList(usersList.map(u => u.id === userId ? { ...u, active: !u.active } : u));
-            };
-
-            // صفحه ورود (کاملا مطابق تصویر)
-            if (!currentUser) {
-                return (
-                    <div class="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-                        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
-                            
-                            {/* هدر تیره با زوایای گرد طبق عکس */}
-                            <div class="card-header-gradient p-8 text-center text-white relative flex flex-col items-center justify-center">
-                                <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg border border-indigo-400/30">
-                                    <i class="fa-solid fa-industry text-3xl text-white"></i>
-                                </div>
-                                <h1 class="text-2xl font-bold tracking-wide">شرکت نسوز دانا</h1>
-                                <p class="text-xs text-indigo-200 mt-1">سامانه یکپارچه CRM و مکاتبات مکتوب</p>
-                            </div>
-
-                            {/* بدنه سفید و فیلدها */}
-                            <div class="p-8">
-                                {loginError && (
-                                    <div class="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-200 text-center font-medium">
-                                        {loginError}
-                                    </div>
-                                )}
-
-                                <form onSubmit={handleLogin} class="space-y-5">
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-2">نام کاربری</label>
-                                        <div class="relative">
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="نام کاربری خود را وارد کنید"
-                                                value={usernameInput}
-                                                onChange={(e) => setUsernameInput(e.target.value)}
-                                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm transition"
-                                            />
-                                            <i class="fa-regular fa-user absolute left-3 top-3.5 text-slate-400 text-base"></i>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-xs font-semibold text-slate-600 mb-2">رمز عبور</label>
-                                        <div class="relative">
-                                            <input 
-                                                type="password" 
-                                                required
-                                                placeholder="••••••••"
-                                                value={passwordInput}
-                                                onChange={(e) => setPasswordInput(e.target.value)}
-                                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm transition"
-                                            />
-                                            <i class="fa-solid fa-lock absolute left-3 top-3.5 text-slate-400 text-base"></i>
-                                        </div>
-                                    </div>
-
-                                    <button 
-                                        type="submit" 
-                                        class="w-full py-3.5 btn-gradient text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all transform active:scale-95">
-                                        <span>ورود به حساب کاربری</span>
-                                        <i class="fa-solid fa-arrow-left"></i>
-                                    </button>
-                                </form>
-
-                                {/* کاربران نمونه جهت تست سریع */}
-                                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                                    <p class="text-xs text-slate-400 font-medium mb-3">
-                                        کاربران نمونه جهت تست ورود (رمز همگی: <span class="font-mono text-indigo-600 font-bold">123</span>):
-                                    </p>
-                                    <div class="flex flex-wrap justify-center gap-2">
-                                        {usersList.map(u => (
-                                            <button 
-                                                key={u.id}
-                                                onClick={() => { setUsernameInput(u.username); setPasswordInput('123'); }}
-                                                class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs rounded-lg border border-slate-200 transition font-mono">
-                                                {u.username} <span class="text-slate-400">({u.role.split(' ')[0]})</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                );
-            }
-
-            // محیط کاربری اصلی برنامه
-            return (
-                <div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col md:flex-row">
-                    
-                    {/* هدر موبایل */}
-                    <div class="md:hidden bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-50">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-industry text-indigo-400 text-xl"></i>
-                            <span class="font-bold text-sm">نسوز دانا</span>
-                        </div>
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} class="p-2 text-slate-300">
-                            <i class="fa-solid fa-bars text-xl"></i>
-                        </button>
-                    </div>
-
-                    {/* منوی سمت راست (Sidebar) */}
-                    <div class={`w-full md:w-64 bg-slate-800 border-l border-slate-700 p-5 flex flex-col justify-between ${sidebarOpen ? 'block' : 'hidden md:flex'}`}>
-                        <div>
-                            <div class="hidden md:flex items-center gap-3 pb-6 border-b border-slate-700">
-                                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                                    <i class="fa-solid fa-industry text-white text-lg"></i>
-                                </div>
-                                <div>
-                                    <h2 class="font-bold text-base text-white">نسوز دانا</h2>
-                                    <p class="text-xs text-slate-400">اتوماسیون مکاتبات</p>
-                                </div>
-                            </div>
-
-                            {/* پروفایل کاربر */}
-                            <div class="my-6 p-3 bg-slate-900/60 rounded-xl border border-slate-700/50">
-                                <p class="text-xs text-slate-400">کاربر فعلی:</p>
-                                <p class="text-sm font-bold text-indigo-300 mt-0.5">{currentUser.name}</p>
-                                <p class="text-xs text-slate-400 mt-1 truncate">{currentUser.role}</p>
-                            </div>
-
-                            {/* تب‌ها */}
-                            <nav class="space-y-2">
-                                <button 
-                                    onClick={() => { setActiveTab('letters'); setSidebarOpen(false); }} 
-                                    class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'letters' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
-                                    <i class="fa-solid fa-[#1e293b] fa-envelope"></i>
-                                    <span>کارتابل مکاتبات</span>
-                                </button>
-
-                                <button 
-                                    onClick={() => { setActiveTab('templates'); setSidebarOpen(false); }} 
-                                    class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'templates' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
-                                    <i class="fa-solid fa-file-lines"></i>
-                                    <span>فرم‌ها و گزارش‌های آماده</span>
-                                </button>
-
-                                {currentUser.isManager && (
-                                    <button 
-                                        onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} 
-                                        class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
-                                        <i class="fa-solid fa-users-gear"></i>
-                                        <span>مدیریت دسترسی پرسنل</span>
-                                    </button>
-                                )}
-                            </nav>
-                        </div>
-
-                        <button 
-                            onClick={handleLogout} 
-                            class="w-full mt-6 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span>خروج از حساب</span>
-                        </button>
-                    </div>
-
-                    {/* محتوای اصلی */}
-                    <div class="flex-1 p-4 md:p-8 overflow-y-auto">
-
-                        {/* بخش ۱: مکاتبات و ثبت نامه */}
-                        {activeTab === 'letters' && (
-                            <div class="space-y-8 max-w-5xl mx-auto">
-                                
-                                {/* فرم ثبت نامه جدید */}
-                                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
-                                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                        <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
-                                        <span>ثبت نامه / استعلام جدید</span>
-                                    </h3>
-
-                                    <form onSubmit={handleSendLetter} class="space-y-4">
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            {/* گیرنده بر اساس چارت سازمانی */}
-                                            <div>
-                                                <label class="block text-xs text-slate-400 mb-1">انتخاب گیرنده (چارت سازمانی):</label>
-                                                <select 
-                                                    value={newReceiver}
-                                                    onChange={(e) => setNewReceiver(e.target.value)}
-                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                                    {ORGANIZATIONAL_CHART.map((role, idx) => (
-                                                        <option key={idx} value={role}>{role}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs text-slate-400 mb-1">موضوع نامه:</label>
-                                                <input 
-                                                    type="text"
-                                                    required
-                                                    placeholder="عنوان موضوع را بنویسید..."
-                                                    value={newSubject}
-                                                    onChange={(e) => setNewSubject(e.target.value)}
-                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-xs text-slate-400 mb-1">اولویت:</label>
-                                                <select 
-                                                    value={newPriority}
-                                                    onChange={(e) => setNewPriority(e.target.value)}
-                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                                    <option value="عادی">عادی</option>
-                                                    <option value="فوری">فوری</option>
-                                                    <option value="آنی / خیلی فوری">آنی / خیلی فوری</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-xs text-slate-400 mb-1">متن اصلی نامه:</label>
-                                            <textarea 
-                                                rows="3"
-                                                required
-                                                placeholder="متن کامل مکاتبه را وارد کنید..."
-                                                value={newText}
-                                                onChange={(e) => setNewText(e.target.value)}
-                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                            ></textarea>
-                                        </div>
-
-                                        <div class="flex justify-end">
-                                            <button type="submit" class="px-6 py-2.5 btn-gradient text-white rounded-xl text-sm font-medium flex items-center gap-2">
-                                                <i class="fa-solid fa-paper-plane"></i>
-                                                <span>ارسال و ثبت اندیکاتور</span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-
-                                {/* لیست مکاتبات ثبت شده */}
-                                <div class="space-y-4">
-                                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                        <i class="fa-solid fa-list-check text-indigo-400"></i>
-                                        <span>کارتابل مکاتبات و پاسخ‌ها</span>
-                                    </h3>
-
-                                    {letters.map(letter => (
-                                        <div key={letter.id} class="bg-slate-800 rounded-2xl p-5 border border-slate-700 space-y-4 shadow-lg">
-                                            
-                                            {/* هدر نامه */}
-                                            <div class="flex flex-wrap justify-between items-start gap-2 pb-3 border-b border-slate-700">
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <span class="text-xs font-mono px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/30">
-                                                            {letter.id}
-                                                        </span>
-                                                        <h4 class="font-bold text-base text-white">{letter.subject}</h4>
-                                                    </div>
-                                                    <p class="text-xs text-slate-400 mt-1">
-                                                        از: <span class="text-slate-200">{letter.sender}</span> | 
-                                                        به: <span class="text-slate-200">{letter.receiver}</span>
-                                                    </p>
-                                                </div>
-
-                                                <div class="flex items-center gap-2">
-                                                    <span class={`text-xs px-2.5 py-1 rounded-full font-bold ${letter.priority === 'فوری' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'}`}>
-                                                        {letter.priority}
-                                                    </span>
-                                                    <span class="text-xs px-2.5 py-1 bg-indigo-600/30 text-indigo-300 rounded-full font-bold">
-                                                        {letter.status}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            {/* متن نامه */}
-                                            <p class="text-sm text-slate-300 leading-relaxed bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
-                                                {letter.text}
-                                            </p>
-
-                                            {/* زنجیره پاسخ‌ها */}
-                                            {letter.replies.length > 0 && (
-                                                <div class="space-y-2 pt-2 pr-4 border-r-2 border-indigo-500">
-                                                    <p class="text-xs font-semibold text-slate-400">پاسخ‌های ثبت‌شده:</p>
-                                                    {letter.replies.map((rep, rIdx) => (
-                                                        <div key={rIdx} class="bg-slate-900/80 p-3 rounded-xl text-xs space-y-1">
-                                                            <div class="flex justify-between text-indigo-300 font-bold">
-                                                                <span>{rep.sender}</span>
-                                                                <span class="text-slate-500 font-mono text-[10px]">{rep.date}</span>
-                                                            </div>
-                                                            <p class="text-slate-200">{rep.text}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            {/* فرم ارسال پاسخ */}
-                                            <div class="pt-2 flex flex-col md:flex-row gap-2">
-                                                <input 
-                                                    type="text"
-                                                    placeholder="پاسخ خود را بنویسید..."
-                                                    value={replyText[letter.id] || ''}
-                                                    onChange={(e) => setReplyText({ ...replyText, [letter.id]: e.target.value })}
-                                                    class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                />
-                                                <select 
-                                                    value={replyStatus[letter.id] || ''}
-                                                    onChange={(e) => setReplyStatus({ ...replyStatus, [letter.id]: e.target.value })}
-                                                    class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs text-slate-200">
-                                                    <option value="پاسخ داده شده">تغییر وضعیت: پاسخ داده شده</option>
-                                                    <option value="تأیید نهایی">تأیید نهایی مدیر</option>
-                                                    <option value="نیازمند اصلاح">نیازمند اصلاح</option>
-                                                </select>
-                                                <button 
-                                                    onClick={() => handleSendReply(letter.id)}
-                                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-medium transition">
-                                                    ثبت پاسخ
-                                                </button>
-                                            </div>
-
-                                        </div>
-                                    ))}
-                                </div>
-
-                            </div>
-                        )}
-
-                        {/* بخش ۲: فرم‌ها و قالب‌های آماده */}
-                        {activeTab === 'templates' && (
-                            <div class="space-y-6 max-w-5xl mx-auto">
-                                <div>
-                                    <h3 class="text-lg font-bold text-white mb-1">فرم‌ها و گزارش‌های آماده مکاتبات</h3>
-                                    <p class="text-xs text-slate-400">برای تسریع در نامه‌نگاری می‌توانید از قالب‌های آماده زیر استفاده کنید:</p>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {templates.map(tpl => (
-                                        <div key={tpl.id} class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col justify-between space-y-3">
-                                            <div>
-                                                <h4 class="font-bold text-sm text-indigo-300">{tpl.title}</h4>
-                                                <p class="text-xs text-slate-400 mt-1">گیرنده پیش‌فرض: {tpl.receiver}</p>
-                                                <p class="text-xs text-slate-300 mt-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50 line-clamp-3">
-                                                    {tpl.text}
-                                                </p>
-                                            </div>
-                                            <button 
-                                                onClick={() => applyTemplate(tpl)}
-                                                class="w-full py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 rounded-xl text-xs font-semibold transition">
-                                                استفاده از این فرم در نامه جدید
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* تعریف فرم جدید توسط مدیران */}
-                                {currentUser.isManager && (
-                                    <div class="mt-8 bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-                                        <h4 class="font-bold text-sm text-white flex items-center gap-2">
-                                            <i class="fa-solid fa-plus text-indigo-400"></i>
-                                            <span>تعریف فرم / الگوی جدید توسط مدیر</span>
-                                        </h4>
-                                        <form onSubmit={handleCreateTemplate} class="space-y-3">
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="عنوان فرم آماده (مثلا: گزارش خرابی کوره)"
-                                                value={newTplTitle}
-                                                onChange={(e) => setNewTplTitle(e.target.value)}
-                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
-                                            />
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="موضوع پیش‌فرض"
-                                                value={newTplSubject}
-                                                onChange={(e) => setNewTplSubject(e.target.value)}
-                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
-                                            />
-                                            <textarea 
-                                                rows="2"
-                                                required
-                                                placeholder="متن الگوی آماده..."
-                                                value={newTplText}
-                                                onChange={(e) => setNewTplText(e.target.value)}
-                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
-                                            ></textarea>
-                                            <button type="submit" class="px-4 py-2 btn-gradient text-white rounded-xl text-xs font-medium">
-                                                ذخیره فرم آماده جدید
-                                            </button>
-                                        </form>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* بخش ۳: مدیریت دسترسی پرسنل */}
-                        {activeTab === 'users' && currentUser.isManager && (
-                            <div class="space-y-6 max-w-5xl mx-auto">
-                                <div>
-                                    <h3 class="text-lg font-bold text-white mb-1">مدیریت پرسنل و دسترسی‌های ورود</h3>
-                                    <p class="text-xs text-slate-400">امکان فعال/غیرفعال‌سازی دسترسی ورود کاربران به سامانه:</p>
-                                </div>
-
-                                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-x-auto">
-                                    <table class="w-full text-right text-xs">
-                                        <thead class="bg-slate-900 text-slate-400">
-                                            <tr>
-                                                <th class="p-4">نام پرسنل</th>
-                                                <th class="p-4">نام کاربری</th>
-                                                <th class="p-4">نقش سازمانی</th>
-                                                <th class="p-4">وضعیت دسترسی</th>
-                                                <th class="p-4">عملیات مدیر</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="divide-y divide-slate-700 text-slate-200">
-                                            {usersList.map(u => (
-                                                <tr key={u.id}>
-                                                    <td class="p-4 font-bold">{u.name}</td>
-                                                    <td class="p-4 font-mono text-indigo-300">{u.username}</td>
-                                                    <td class="p-4">{u.role}</td>
-                                                    <td class="p-4">
-                                                        <span class={`px-2 py-1 rounded-full text-[10px] font-bold ${u.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                            {u.active ? 'فعال' : 'غیرفعال شده'}
-                                                        </span>
-                                                    </td>
-                                                    <td class="p-4">
-                                                        <button 
-                                                            onClick={() => toggleUserStatus(u.id)}
-                                                            class={`px-3 py-1 rounded-lg text-[11px] font-semibold transition ${u.active ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30'}`}>
-                                                            {u.active ? 'غیرفعال کردن' : 'فعال‌سازی دسترسی'}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        )}
-
-                    </div>
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('app'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+        const INITIAL_CORRESPONDENCES = [
+            {
+                id: 'ND-LETTER-1405-101',
+                sender: 'سعید امینی (کارشناس فروش)',
+                receiver: 'مدیر کارخانه',
+                subject: 'استعلام امکان‌سنجی پوشش پلیمری مخزن صنعتی',
+                body: 'احتراماً درخواست استعلام فنی مشتری پتروشیمی برای پوشش ضداسید پلیمری با ضخامت ۲ میلی‌متر ارسال می‌گردد. لطفاً زمان‌بندی تست کارگاهی را اعلام فرمایید.',
+                deadline: '۴
