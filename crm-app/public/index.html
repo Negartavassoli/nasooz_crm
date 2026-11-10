@@ -3,717 +3,634 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>سیستم یکپارچه مکاتبات و CRM شرکت نسوز دانا</title>
-    <!-- React & Tailwind CDN for Demo -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <title>سامانه اتوماسیون و مکاتبات نسوز دانا</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons for professional icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Vazirmatn Font -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <style>
-        body { font-family: 'Vazirmatn', sans-serif; background-color: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .bg-custom-dark {
+            background-color: #0f172a;
+        }
+        .card-header-gradient {
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        .btn-gradient:hover {
+            background: linear-gradient(90deg, #4338ca 0%, #4f46e5 100%);
+        }
     </style>
 </head>
-<body>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
-    <div id="root"></div>
+    <div id="app"></div>
+
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // نقش‌های موجود طبق چارت سازمانی شرکت نسوز دانا
-        const ROLES = [
-            { id: 'CEO', title: 'مدیر عامل / رئیس هیئت مدیره', isMgr: true },
-            { id: 'COMMERCIAL_MGR', title: 'مدیر بازرگانی', isMgr: true },
-            { id: 'PLANT_MGR', title: 'مدیر کارخانه', isMgr: true },
-            { id: 'FINANCIAL_MGR', title: 'مدیر مالی', isMgr: true },
-            { id: 'PROJECT_SUP', title: 'سرپرست پروژه ها', isMgr: true },
-            { id: 'PROD_SUP', title: 'سرپرست تولید', isMgr: false },
-            { id: 'PM_SUP', title: 'سرپرست کارگاه ساخت و PM', isMgr: false },
-            { id: 'WH_SPEC', title: 'کارشناس انبار', isMgr: false },
-            { id: 'SALES_SPEC', title: 'کارشناس فروش', isMgr: false },
-            { id: 'PURCHASE_SPEC', title: 'کارشناس خرید', isMgr: false },
-            { id: 'ACC_SPEC', title: 'کارشناس حسابداری', isMgr: false }
+        // چارت سازمانی شرکت نسوز دانا
+        const ORGANIZATIONAL_CHART = [
+            "هیئت مدیره",
+            "مدیرعامل (مهندس دانایی)",
+            "مدیر کارخانه (مهندس اکبری)",
+            "مدیر مالی و اداری",
+            "مدیر بازرگانی و فروش",
+            "سرپرست انبار و مواد اولیه",
+            "سرپرست خط تولید و بچ‌سازی",
+            "واحد مهندسی و R&D",
+            "واحد کنترل کیفیت (QC)"
         ];
 
-        // کاربران اولیه سیستم به همراه رمز عبور
-        const INITIAL_USERS = [
-            { id: 1, name: 'سارینا امینی', role: 'SALES_SPEC', username: 's_amini', password: '123', active: true, createdAt: '۱۴۰۵/۰۱/۱۵' },
-            { id: 2, name: 'محمد رضایی', role: 'PROD_SUP', username: 'm_rezaei', password: '123', active: true, createdAt: '۱۴۰۵/۰۲/۱۰' },
-            { id: 3, name: 'مهندس اکبری', role: 'PLANT_MGR', username: 'akbari', password: '123', active: true, createdAt: '۱۴۰۴/۱۱/۰۱' },
-            { id: 4, name: 'مدیریت ارشد', role: 'CEO', username: 'admin', password: '123', active: true, createdAt: '۱۴۰۴/۱۰/۰۱' },
-            { id: 5, name: 'رضا کریمی', role: 'WH_SPEC', username: 'r_karimi', password: '123', active: false, createdAt: '۱۴۰۵/۰۴/۲۰' }
+        // کاربران نمونه جهت ورود
+        const SAMPLE_USERS = [
+            { id: '1', username: 'admin', name: 'مدیر سیستم', role: 'مدیرعامل (مهندس دانایی)', isManager: true, active: true, pass: '123' },
+            { id: '2', username: 'akbari', name: 'مهندس اکبری', role: 'مدیر کارخانه (مهندس اکبری)', isManager: true, active: true, pass: '123' },
+            { id: '3', username: 's_amini', name: 'مریم امینی', role: 'مدیر بازرگانی و فروش', isManager: false, active: true, pass: '123' }
         ];
 
-        // نمونه دیتای اولیه مکاتبات
-        const INITIAL_CORRESPONDENCES = [
-            {
-                id: 'ND-CR-1403-1001',
-                sender: 'مریم تهرانی (کارشناس فروش)',
-                receiver: 'مدیریت R&D / مهندسی',
-                subject: 'استعلام امکان‌سنجی پوشش پلیمری مخزن پتروشیمی',
-                body: 'خواهشمند است نسبت به بررسی فرمولاسیون چسب پایه سرامیکی برای دمای ۴۵۰ درجه اعلام نظر فرمایید.',
-                deadline: '۴۸ ساعت',
-                status: 'در انتظار پاسخ',
-                date: '۱۴۰۵/۰۸/۱۱',
-                replies: []
-            },
-            {
-                id: 'ND-CR-1403-1002',
-                sender: 'محمد رضایی (سرپرست تولید)',
-                receiver: 'مدیر کارخانه',
-                subject: 'درخواست تأمین رزین پایه متال برای بچ #902',
-                body: 'مقدار ۵۰۰ کیلوگرم رزین اپوکسی پایه متال طبق فرمولاسیون مصوب مورد نیاز است.',
-                deadline: 'فوری',
-                status: 'تأییدشده',
-                date: '۱۴۰۵/۰۸/۱۰',
-                replies: [
-                    {
-                        sender: 'مهندس اکبری (مدیر کارخانه)',
-                        body: 'با واحد انبار هماهنگ شد. ارسال مواد به خط تولید بمانع است.',
-                        date: '۱۴۰۵/۰۸/۱۰ - ۱۴:۳۰'
-                    }
-                ]
-            }
+        // قالب‌های فرم آماده
+        const INITIAL_TEMPLATES = [
+            { id: 1, title: 'استعلام امکان‌سنجی فنی R&D', receiver: 'واحد مهندسی و R&D', subject: 'بررسی فرمولاسیون پوشش پلیمری مخزن', text: 'با سلام، لطفاً امکان‌سنجی تولید پوشش پلیمری با تحمل حرارتی بالا جهت ارائه به مشتری بررسی گردد.' },
+            { id: 2, title: 'درخواست تأمین مواد اولیه انبار', receiver: 'سرپرست انبار و مواد اولیه', subject: 'تأمین رزین متال‌پایه بچ #902', text: 'احتراما درخواست تامین مواد اولیه رزین به میزان ۵۰۰ کیلوگرم برای خط تولید ارسال می‌گردد.' },
+            { id: 3, title: 'گزارش روزانه تولید بچ', receiver: 'مدیر کارخانه (مهندس اکبری)', subject: 'گزارش شیفت روزانه تولید نسوز', text: 'گزارش کارکرد شیفت روزانه: کلیه دستگاه‌ها فعال بوده و حجم تولید طبق برنامه محقق گردید.' }
         ];
 
         function App() {
-            // Auth State
-            const [users, setUsers] = useState(INITIAL_USERS);
-            const [currentUser, setCurrentUser] = useState(null); // null = Logged Out
-            const [loginForm, setLoginForm] = useState({ username: '', password: '' });
+            const [currentUser, setCurrentUser] = useState(null);
+            const [usernameInput, setUsernameInput] = useState('');
+            const [passwordInput, setPasswordInput] = useState('');
             const [loginError, setLoginError] = useState('');
 
-            // App State
-            const [activeTab, setActiveTab] = useState('correspondence');
-            const [correspondences, setCorrespondences] = useState(INITIAL_CORRESPONDENCES);
-
-            // Form states
-            const [newCorr, setNewCorr] = useState({ receiver: '', subject: '', body: '', deadline: 'عادی' });
-            const [newUser, setNewUser] = useState({ name: '', role: 'SALES_SPEC', username: '', password: '123' });
-            const [selectedUserDetail, setSelectedUserDetail] = useState(null);
-            const [resetPasswordId, setResetPasswordId] = useState(null);
-            const [newPasswordValue, setNewPasswordValue] = useState('');
+            // وضعیت‌ها
+            const [activeTab, setActiveTab] = useState('letters'); // letters, templates, users
+            const [sidebarOpen, setSidebarOpen] = useState(false);
             
-            // Reply state
-            const [activeReplyId, setActiveReplyId] = useState(null);
-            const [replyText, setReplyText] = useState('');
-            const [replyStatus, setReplyStatus] = useState('تأییدشده');
+            // داده‌ها
+            const [letters, setLetters] = useState([
+                {
+                    id: 'ND-CR-1403-8821',
+                    sender: 'مریم امینی (مدیر بازرگانی)',
+                    receiver: 'واحد مهندسی و R&D',
+                    subject: 'استعلام امکان‌سنجی پوشش پلیمری مخزن',
+                    text: 'لطفا شرایط فنی و زمان‌بندی تولید محصول پوشش نسوز پلیمری را بررسی نمایید.',
+                    date: '۱۴۰۵/۰۸/۱۱',
+                    priority: 'فوری',
+                    status: 'در انتظار پاسخ',
+                    replies: []
+                }
+            ]);
 
-            const isManager = currentUser && (ROLES.find(r => r.id === currentUser.role)?.isMgr || currentUser.role === 'CEO');
+            const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
+            const [usersList, setUsersList] = useState(SAMPLE_USERS);
 
-            // Handle Login
+            // فرم نامه جدید
+            const [newReceiver, setNewReceiver] = useState(ORGANIZATIONAL_CHART[0]);
+            const [newSubject, setNewSubject] = useState('');
+            const [newPriority, setNewPriority] = useState('عادی');
+            const [newText, setNewText] = useState('');
+
+            // پاسخ‌دهی
+            const [replyText, setReplyText] = useState({});
+            const [replyStatus, setReplyStatus] = useState({});
+
+            // ساخت فرم جدید توسط مدیر
+            const [newTplTitle, setNewTplTitle] = useState('');
+            const [newTplSubject, setNewTplSubject] = useState('');
+            const [newTplText, setNewTplText] = useState('');
+
+            // ورود به سیستم
             const handleLogin = (e) => {
                 e.preventDefault();
-                setLoginError('');
-                const found = users.find(u => u.username.trim().toLowerCase() === loginForm.username.trim().toLowerCase());
-                
-                if (!found) {
-                    setLoginError('نام کاربری یافت نشد.');
-                    return;
+                const found = usersList.find(u => u.username === usernameInput && u.pass === passwordInput);
+                if (found) {
+                    if (!found.active) {
+                        setLoginError('حساب کاربری شما غیرفعال شده است.');
+                        return;
+                    }
+                    setCurrentUser(found);
+                    setLoginError('');
+                } else {
+                    setLoginError('نام کاربری یا رمز عبور اشتباه است.');
                 }
-
-                if (found.password !== loginForm.password) {
-                    setLoginError('رمز عبور وارد شده اشتباه است.');
-                    return;
-                }
-
-                if (!found.active) {
-                    setLoginError('حساب کاربری شما توسط مدیریت غیرفعال شده است.');
-                    return;
-                }
-
-                setCurrentUser(found);
-                setLoginForm({ username: '', password: '' });
             };
 
             const handleLogout = () => {
                 setCurrentUser(null);
-                setActiveTab('correspondence');
+                setUsernameInput('');
+                setPasswordInput('');
             };
 
-            const handleToggleUserStatus = (userId) => {
-                if (!isManager) {
-                    alert('خطا: فقط مدیران ارشد اجازه تغییر وضعیت دسترسی پرسنل را دارند.');
-                    return;
-                }
-                const updatedUsers = users.map(u => {
-                    if (u.id === userId) {
-                        const newStatus = !u.active;
-                        return { ...u, active: newStatus };
-                    }
-                    return u;
-                });
-                setUsers(updatedUsers);
-            };
-
-            const handleResetPassword = (userId) => {
-                if (!newPasswordValue.trim()) return;
-                const updatedUsers = users.map(u => {
-                    if (u.id === userId) {
-                        return { ...u, password: newPasswordValue };
-                    }
-                    return u;
-                });
-                setUsers(updatedUsers);
-                setResetPasswordId(null);
-                setNewPasswordValue('');
-                alert('رمز عبور کاربر با موفقیت تغییر یافت.');
-            };
-
-            const handleAddCorr = (e) => {
+            // ثبت نامه جدید
+            const handleSendLetter = (e) => {
                 e.preventDefault();
-                const roleTitle = ROLES.find(r => r.id === currentUser.role)?.title || currentUser.role;
-                const item = {
+                if (!newSubject || !newText) return;
+                const newDoc = {
                     id: `ND-CR-1403-${Math.floor(1000 + Math.random() * 9000)}`,
-                    sender: `${currentUser.name} (${roleTitle})`,
-                    receiver: newCorr.receiver,
-                    subject: newCorr.subject,
-                    body: newCorr.body,
-                    deadline: newCorr.deadline,
-                    status: 'در انتظار پاسخ',
+                    sender: `${currentUser.name} (${currentUser.role})`,
+                    receiver: newReceiver,
+                    subject: newSubject,
+                    text: newText,
+                    priority: newPriority,
                     date: new Date().toLocaleDateString('fa-IR'),
+                    status: 'در انتظار پاسخ',
                     replies: []
                 };
-                setCorrespondences([item, ...correspondences]);
-                setNewCorr({ receiver: '', subject: '', body: '', deadline: 'عادی' });
+                setLetters([newDoc, ...letters]);
+                setNewSubject('');
+                setNewText('');
+                alert('نامه با موفقیت ثبت و ارسال شد.');
             };
 
-            const handleSendReply = (corrId) => {
-                if (!replyText.trim()) return;
-                const roleTitle = ROLES.find(r => r.id === currentUser.role)?.title || currentUser.role;
-                
-                const updated = correspondences.map(item => {
-                    if (item.id === corrId) {
+            // استفاده از قالب آماده
+            const applyTemplate = (tpl) => {
+                setNewReceiver(tpl.receiver);
+                setNewSubject(tpl.subject);
+                setNewText(tpl.text);
+                setActiveTab('letters');
+            };
+
+            // ارسال پاسخ نامه
+            const handleSendReply = (letterId) => {
+                const text = replyText[letterId];
+                if (!text) return;
+                const status = replyStatus[letterId] || 'پاسخ داده شده';
+
+                setLetters(letters.map(item => {
+                    if (item.id === letterId) {
                         return {
                             ...item,
-                            status: replyStatus,
+                            status: status,
                             replies: [
-                                ...(item.replies || []),
+                                ...item.replies,
                                 {
-                                    sender: `${currentUser.name} (${roleTitle})`,
-                                    body: replyText,
-                                    date: new Date().toLocaleDateString('fa-IR') + ' - ' + new Date().toLocaleTimeString('fa-IR', {hour: '2-digit', minute:'2-digit'})
+                                    sender: `${currentUser.name} (${currentUser.role})`,
+                                    text: text,
+                                    date: new Date().toLocaleDateString('fa-IR') + ' - ' + new Date().toLocaleTimeString('fa-IR', {hour:'2-digit', minute:'2-digit'})
                                 }
                             ]
                         };
                     }
                     return item;
-                });
+                }));
 
-                setCorrespondences(updated);
-                setReplyText('');
-                setActiveReplyId(null);
+                setReplyText({ ...replyText, [letterId]: '' });
             };
 
-            const handleAddUser = (e) => {
+            // ساخت قالب جدید توسط مدیر
+            const handleCreateTemplate = (e) => {
                 e.preventDefault();
-                if (users.some(u => u.username === newUser.username)) {
-                    alert('این نام کاربری قبلاً در سیستم ثبت شده است.');
-                    return;
-                }
-                const created = {
-                    ...newUser,
+                if (!newTplTitle || !newTplText) return;
+                const newTpl = {
                     id: Date.now(),
-                    active: true,
-                    createdAt: new Date().toLocaleDateString('fa-IR')
+                    title: newTplTitle,
+                    receiver: ORGANIZATIONAL_CHART[0],
+                    subject: newTplSubject,
+                    text: newTplText
                 };
-                setUsers([...users, created]);
-                setNewUser({ name: '', role: 'SALES_SPEC', username: '', password: '123' });
-                alert('کارمند جدید با موفقیت ایجاد شد.');
+                setTemplates([...templates, newTpl]);
+                setNewTplTitle('');
+                setNewTplSubject('');
+                setNewTplText('');
+                alert('فرم آماده جدید اضافه شد.');
             };
 
-            // -------------------------------------------------------------
-            // SCREEN 1: LOGIN FORM
-            // -------------------------------------------------------------
+            // فعال/غیرفعال کردن کاربر
+            const toggleUserStatus = (userId) => {
+                setUsersList(usersList.map(u => u.id === userId ? { ...u, active: !u.active } : u));
+            };
+
+            // صفحه ورود (کاملا مطابق تصویر)
             if (!currentUser) {
                 return (
-                    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-                        {/* Decorative Background Effects */}
-                        <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
-                        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-sky-600/20 rounded-full blur-3xl"></div>
-
-                        <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 z-10">
-                            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-8 text-white text-center relative">
-                                <div className="w-16 h-16 bg-indigo-600/30 border border-indigo-400/30 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
-                                    <i className="fa-solid fa-industry text-2xl text-sky-400"></i>
+                    <div class="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+                        <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-800">
+                            
+                            {/* هدر تیره با زوایای گرد طبق عکس */}
+                            <div class="card-header-gradient p-8 text-center text-white relative flex flex-col items-center justify-center">
+                                <div class="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mb-4 shadow-lg border border-indigo-400/30">
+                                    <i class="fa-solid fa-industry text-3xl text-white"></i>
                                 </div>
-                                <h1 className="text-xl font-bold tracking-tight">شرکت نسوز دانا</h1>
-                                <p className="text-xs text-slate-400 mt-1">سامانه یکپارچه CRM و مکاتبات مکتوب</p>
+                                <h1 class="text-2xl font-bold tracking-wide">شرکت نسوز دانا</h1>
+                                <p class="text-xs text-indigo-200 mt-1">سامانه یکپارچه CRM و مکاتبات مکتوب</p>
                             </div>
 
-                            <form onSubmit={handleLogin} className="p-8 space-y-5">
+                            {/* بدنه سفید و فیلدها */}
+                            <div class="p-8">
                                 {loginError && (
-                                    <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3.5 rounded-xl flex items-center gap-2 font-medium">
-                                        <i className="fa-solid fa-triangle-exclamation text-sm"></i>
+                                    <div class="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-xl border border-red-200 text-center font-medium">
                                         {loginError}
                                     </div>
                                 )}
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">نام کاربری</label>
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-slate-400 text-xs">
-                                            <i className="fa-solid fa-user"></i>
-                                        </span>
-                                        <input 
-                                            type="text"
-                                            required
-                                            placeholder="نام کاربری خود را وارد کنید"
-                                            value={loginForm.username}
-                                            onChange={e => setLoginForm({...loginForm, username: e.target.value})}
-                                            className="w-full pr-10 pl-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                                        />
+                                <form onSubmit={handleLogin} class="space-y-5">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-2">نام کاربری</label>
+                                        <div class="relative">
+                                            <input 
+                                                type="text" 
+                                                required
+                                                placeholder="نام کاربری خود را وارد کنید"
+                                                value={usernameInput}
+                                                onChange={(e) => setUsernameInput(e.target.value)}
+                                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm transition"
+                                            />
+                                            <i class="fa-regular fa-user absolute left-3 top-3.5 text-slate-400 text-base"></i>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-2">رمز عبور</label>
+                                        <div class="relative">
+                                            <input 
+                                                type="password" 
+                                                required
+                                                placeholder="••••••••"
+                                                value={passwordInput}
+                                                onChange={(e) => setPasswordInput(e.target.value)}
+                                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-sm transition"
+                                            />
+                                            <i class="fa-solid fa-lock absolute left-3 top-3.5 text-slate-400 text-base"></i>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        class="w-full py-3.5 btn-gradient text-white rounded-xl font-medium text-sm flex items-center justify-center gap-2 transition-all transform active:scale-95">
+                                        <span>ورود به حساب کاربری</span>
+                                        <i class="fa-solid fa-arrow-left"></i>
+                                    </button>
+                                </form>
+
+                                {/* کاربران نمونه جهت تست سریع */}
+                                <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+                                    <p class="text-xs text-slate-400 font-medium mb-3">
+                                        کاربران نمونه جهت تست ورود (رمز همگی: <span class="font-mono text-indigo-600 font-bold">123</span>):
+                                    </p>
+                                    <div class="flex flex-wrap justify-center gap-2">
+                                        {usersList.map(u => (
+                                            <button 
+                                                key={u.id}
+                                                onClick={() => { setUsernameInput(u.username); setPasswordInput('123'); }}
+                                                class="px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 text-xs rounded-lg border border-slate-200 transition font-mono">
+                                                {u.username} <span class="text-slate-400">({u.role.split(' ')[0]})</span>
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-1.5">رمز عبور</label>
-                                    <div className="relative">
-                                        <span className="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-slate-400 text-xs">
-                                            <i className="fa-solid fa-lock"></i>
-                                        </span>
-                                        <input 
-                                            type="password"
-                                            required
-                                            placeholder="••••••••"
-                                            value={loginForm.password}
-                                            onChange={e => setLoginForm({...loginForm, password: e.target.value})}
-                                            className="w-full pr-10 pl-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                                        />
-                                    </div>
-                                </div>
-
-                                <button 
-                                    type="submit"
-                                    className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition flex items-center justify-center gap-2 text-sm">
-                                    <span>ورود به حساب کاربری</span>
-                                    <i className="fa-solid fa-arrow-left text-xs"></i>
-                                </button>
-
-                                {/* Demo hint for convenience */}
-                                <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                                    <p className="text-[11px] text-slate-400 mb-2">کاربران نمونه جهت تست ورود (رمز عبور همگی: <code className="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-bold">123</code>):</p>
-                                    <div className="flex flex-wrap justify-center gap-1.5 text-[10px]">
-                                        <span onClick={() => setLoginForm({username: 'admin', password: '123'})} className="cursor-pointer bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 px-2 py-1 rounded-md text-slate-600 transition">admin (مدیرعامل)</span>
-                                        <span onClick={() => setLoginForm({username: 'akbari', password: '123'})} className="cursor-pointer bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 px-2 py-1 rounded-md text-slate-600 transition">akbari (مدیر کارخانه)</span>
-                                        <span onClick={() => setLoginForm({username: 's_amini', password: '123'})} className="cursor-pointer bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 px-2 py-1 rounded-md text-slate-600 transition">s_amini (فروش)</span>
-                                    </div>
-                                </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 );
             }
 
-            // -------------------------------------------------------------
-            // SCREEN 2: MAIN DASHBOARD (LOGGED IN)
-            // -------------------------------------------------------------
-            const roleObj = ROLES.find(r => r.id === currentUser.role);
-
+            // محیط کاربری اصلی برنامه
             return (
-                <div className="flex h-screen bg-slate-100 text-slate-800 font-sans overflow-hidden">
-                    {/* Sidebar Navigation */}
-                    <aside className="w-72 bg-slate-900 text-white flex flex-col justify-between shadow-2xl z-20">
+                <div class="min-h-screen bg-slate-900 text-slate-100 flex flex-col md:flex-row">
+                    
+                    {/* هدر موبایل */}
+                    <div class="md:hidden bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center sticky top-0 z-50">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-industry text-indigo-400 text-xl"></i>
+                            <span class="font-bold text-sm">نسوز دانا</span>
+                        </div>
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} class="p-2 text-slate-300">
+                            <i class="fa-solid fa-bars text-xl"></i>
+                        </button>
+                    </div>
+
+                    {/* منوی سمت راست (Sidebar) */}
+                    <div class={`w-full md:w-64 bg-slate-800 border-l border-slate-700 p-5 flex flex-col justify-between ${sidebarOpen ? 'block' : 'hidden md:flex'}`}>
                         <div>
-                            {/* Brand Logo */}
-                            <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-                                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md shadow-indigo-600/40">
-                                    <i className="fa-solid fa-fire-burner"></i>
+                            <div class="hidden md:flex items-center gap-3 pb-6 border-b border-slate-700">
+                                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
+                                    <i class="fa-solid fa-industry text-white text-lg"></i>
                                 </div>
                                 <div>
-                                    <h1 className="font-bold text-sm tracking-wide text-white">شرکت نسوز دانا</h1>
-                                    <p className="text-[10px] text-sky-400 font-medium">اتوماسیون و اتکا به مکاتبات مکتوب</p>
+                                    <h2 class="font-bold text-base text-white">نسوز دانا</h2>
+                                    <p class="text-xs text-slate-400">اتوماسیون مکاتبات</p>
                                 </div>
                             </div>
 
-                            {/* User Profile Summary */}
-                            <div className="p-4 mx-3 my-4 bg-slate-800/80 rounded-2xl border border-slate-700/60 flex items-center gap-3">
-                                <div className="w-9 h-9 bg-gradient-to-tr from-indigo-500 to-sky-400 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow">
-                                    {currentUser.name.charAt(0)}
-                                </div>
-                                <div className="overflow-hidden flex-1">
-                                    <h2 className="text-xs font-bold text-white truncate">{currentUser.name}</h2>
-                                    <span className="inline-block text-[10px] text-slate-400 truncate">{roleObj?.title}</span>
-                                </div>
+                            {/* پروفایل کاربر */}
+                            <div class="my-6 p-3 bg-slate-900/60 rounded-xl border border-slate-700/50">
+                                <p class="text-xs text-slate-400">کاربر فعلی:</p>
+                                <p class="text-sm font-bold text-indigo-300 mt-0.5">{currentUser.name}</p>
+                                <p class="text-xs text-slate-400 mt-1 truncate">{currentUser.role}</p>
                             </div>
 
-                            {/* Navigation Links */}
-                            <nav className="px-3 space-y-1">
+                            {/* تب‌ها */}
+                            <nav class="space-y-2">
                                 <button 
-                                    onClick={() => setActiveTab('correspondence')}
-                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-                                        activeTab === 'correspondence' 
-                                            ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
-                                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                                    }`}>
-                                    <i className="fa-solid fa-inbox text-sm"></i>
-                                    <span>کارتابل مکاتبات و اسناد</span>
+                                    onClick={() => { setActiveTab('letters'); setSidebarOpen(false); }} 
+                                    class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'letters' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
+                                    <i class="fa-solid fa-[#1e293b] fa-envelope"></i>
+                                    <span>کارتابل مکاتبات</span>
                                 </button>
-                                
-                                {isManager && (
+
+                                <button 
+                                    onClick={() => { setActiveTab('templates'); setSidebarOpen(false); }} 
+                                    class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'templates' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
+                                    <i class="fa-solid fa-file-lines"></i>
+                                    <span>فرم‌ها و گزارش‌های آماده</span>
+                                </button>
+
+                                {currentUser.isManager && (
                                     <button 
-                                        onClick={() => setActiveTab('users')}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all ${
-                                            activeTab === 'users' 
-                                                ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-lg shadow-indigo-600/30' 
-                                                : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                                        }`}>
-                                        <i className="fa-solid fa-users-gear text-sm"></i>
-                                        <span>مدیریت پرسنل و دسترسی‌ها</span>
+                                        onClick={() => { setActiveTab('users'); setSidebarOpen(false); }} 
+                                        class={`w-full text-right px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-3 transition ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-700/50'}`}>
+                                        <i class="fa-solid fa-users-gear"></i>
+                                        <span>مدیریت دسترسی پرسنل</span>
                                     </button>
                                 )}
                             </nav>
                         </div>
 
-                        {/* Footer & Logout */}
-                        <div className="p-4 border-t border-slate-800">
-                            <button 
-                                onClick={handleLogout}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-rose-600/20 text-slate-300 hover:text-rose-400 rounded-xl text-xs font-bold border border-slate-700 hover:border-rose-500/30 transition">
-                                <i className="fa-solid fa-right-from-bracket"></i>
-                                <span>خروج از حساب کاربری</span>
-                            </button>
-                        </div>
-                    </aside>
+                        <button 
+                            onClick={handleLogout} 
+                            class="w-full mt-6 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>خروج از حساب</span>
+                        </button>
+                    </div>
 
-                    {/* Main Content Area */}
-                    <main className="flex-1 overflow-y-auto custom-scrollbar p-8">
-                        {activeTab === 'correspondence' && (
-                            <div className="max-w-6xl mx-auto space-y-6">
-                                {/* Header */}
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                                    <div>
-                                        <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                            <i className="fa-solid fa-folder-tree text-indigo-600"></i>
-                                            کارتابل مکاتبات رسمی و فرم‌های بین‌واحدی
-                                        </h1>
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            ثبت مستقیم تمامی مکاتبات بر روی سرور فیزیکی شرکت با قابلیت ردیابی اندیکاتور
-                                        </p>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 text-xs px-3 py-1.5 rounded-xl border border-emerald-200 font-bold">
-                                            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                            سرور آنلاین
-                                        </span>
-                                    </div>
-                                </div>
+                    {/* محتوای اصلی */}
+                    <div class="flex-1 p-4 md:p-8 overflow-y-auto">
 
-                                {/* Form for New Correspondence */}
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                                    <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <i className="fa-solid fa-pen-to-square text-indigo-600"></i>
-                                        ارسال استعلام / نامه جدید
-                                    </h2>
-                                    <form onSubmit={handleAddCorr} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">واحد / گیرنده مقصد</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="مثال: مدیریت کارخانه / کارشناس انبار"
-                                                value={newCorr.receiver}
-                                                onChange={e => setNewCorr({...newCorr, receiver: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                                            />
+                        {/* بخش ۱: مکاتبات و ثبت نامه */}
+                        {activeTab === 'letters' && (
+                            <div class="space-y-8 max-w-5xl mx-auto">
+                                
+                                {/* فرم ثبت نامه جدید */}
+                                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl">
+                                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                        <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
+                                        <span>ثبت نامه / استعلام جدید</span>
+                                    </h3>
+
+                                    <form onSubmit={handleSendLetter} class="space-y-4">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {/* گیرنده بر اساس چارت سازمانی */}
+                                            <div>
+                                                <label class="block text-xs text-slate-400 mb-1">انتخاب گیرنده (چارت سازمانی):</label>
+                                                <select 
+                                                    value={newReceiver}
+                                                    onChange={(e) => setNewReceiver(e.target.value)}
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    {ORGANIZATIONAL_CHART.map((role, idx) => (
+                                                        <option key={idx} value={role}>{role}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs text-slate-400 mb-1">موضوع نامه:</label>
+                                                <input 
+                                                    type="text"
+                                                    required
+                                                    placeholder="عنوان موضوع را بنویسید..."
+                                                    value={newSubject}
+                                                    onChange={(e) => setNewSubject(e.target.value)}
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-xs text-slate-400 mb-1">اولویت:</label>
+                                                <select 
+                                                    value={newPriority}
+                                                    onChange={(e) => setNewPriority(e.target.value)}
+                                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                                    <option value="عادی">عادی</option>
+                                                    <option value="فوری">فوری</option>
+                                                    <option value="آنی / خیلی فوری">آنی / خیلی فوری</option>
+                                                </select>
+                                            </div>
                                         </div>
+
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">موضوع سند / درخواست</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="موضوع استعلام یا فرم"
-                                                value={newCorr.subject}
-                                                onChange={e => setNewCorr({...newCorr, subject: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">اولویت زمانی</label>
-                                            <select 
-                                                value={newCorr.deadline}
-                                                onChange={e => setNewCorr({...newCorr, deadline: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                                                <option value="عادی">عادی (روال عادی)</option>
-                                                <option value="۴۸ ساعت">۴۸ ساعت (امکان‌سنجی فنی)</option>
-                                                <option value="فوری">فوری (خط تولید / پروژه)</option>
-                                            </select>
-                                        </div>
-                                        <div className="md:col-span-3">
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">متن شرح درخواست مکتوب</label>
+                                            <label class="block text-xs text-slate-400 mb-1">متن اصلی نامه:</label>
                                             <textarea 
                                                 rows="3"
                                                 required
-                                                placeholder="مشخصات کامل درخواست، پارت نامبرها یا توضیحات فنی..."
-                                                value={newCorr.body}
-                                                onChange={e => setNewCorr({...newCorr, body: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition"
+                                                placeholder="متن کامل مکاتبه را وارد کنید..."
+                                                value={newText}
+                                                onChange={(e) => setNewText(e.target.value)}
+                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                             ></textarea>
                                         </div>
-                                        <div className="md:col-span-3 flex justify-end">
-                                            <button 
-                                                type="submit" 
-                                                className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center gap-2">
-                                                <i className="fa-solid fa-paper-plane"></i>
-                                                <span>ثبت و صدور اندیکاتور در سرور</span>
+
+                                        <div class="flex justify-end">
+                                            <button type="submit" class="px-6 py-2.5 btn-gradient text-white rounded-xl text-sm font-medium flex items-center gap-2">
+                                                <i class="fa-solid fa-paper-plane"></i>
+                                                <span>ارسال و ثبت اندیکاتور</span>
                                             </button>
                                         </div>
                                     </form>
                                 </div>
 
-                                {/* Correspondences List */}
-                                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                                    <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                                        <h3 className="font-bold text-xs text-slate-800 flex items-center gap-2">
-                                            <i className="fa-solid fa-list-check text-indigo-600"></i>
-                                            لیست مکاتبات بایگانی‌شده روی سرور
-                                        </h3>
-                                        <span className="text-[11px] text-slate-500">تعداد کل: {correspondences.length} سند</span>
-                                    </div>
+                                {/* لیست مکاتبات ثبت شده */}
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                        <i class="fa-solid fa-list-check text-indigo-400"></i>
+                                        <span>کارتابل مکاتبات و پاسخ‌ها</span>
+                                    </h3>
 
-                                    <div className="divide-y divide-slate-100">
-                                        {correspondences.map(item => (
-                                            <div key={item.id} className="p-5 hover:bg-slate-50/60 transition">
-                                                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-3">
-                                                    <div>
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="font-mono text-[11px] font-bold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-md border border-indigo-200">
-                                                                {item.id}
-                                                            </span>
-                                                            <h4 className="font-bold text-sm text-slate-900">{item.subject}</h4>
-                                                        </div>
-                                                        <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                                                            <span>از: <strong className="text-slate-700">{item.sender}</strong></span>
-                                                            <span>به: <strong className="text-slate-700">{item.receiver}</strong></span>
-                                                            <span>اولویت: <strong className="text-amber-600">{item.deadline}</strong></span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="text-[11px] text-slate-400">{item.date}</span>
-                                                        <span className={`px-2.5 py-1 rounded-lg text-[11px] font-bold ${
-                                                            item.status === 'تأییدشده' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                                            item.status === 'نیازمند اصلاح' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                                                            'bg-amber-50 text-amber-700 border border-amber-200'
-                                                        }`}>
-                                                            {item.status}
+                                    {letters.map(letter => (
+                                        <div key={letter.id} class="bg-slate-800 rounded-2xl p-5 border border-slate-700 space-y-4 shadow-lg">
+                                            
+                                            {/* هدر نامه */}
+                                            <div class="flex flex-wrap justify-between items-start gap-2 pb-3 border-b border-slate-700">
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-xs font-mono px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md border border-indigo-500/30">
+                                                            {letter.id}
                                                         </span>
-                                                        <button 
-                                                            onClick={() => setActiveReplyId(activeReplyId === item.id ? null : item.id)}
-                                                            className="text-xs bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-700 px-3 py-1.5 rounded-xl border border-slate-200 font-bold transition flex items-center gap-1.5">
-                                                            <i className="fa-solid fa-reply text-[10px]"></i>
-                                                            <span>پاسخ / وضعیت</span>
-                                                        </button>
+                                                        <h4 class="font-bold text-base text-white">{letter.subject}</h4>
                                                     </div>
+                                                    <p class="text-xs text-slate-400 mt-1">
+                                                        از: <span class="text-slate-200">{letter.sender}</span> | 
+                                                        به: <span class="text-slate-200">{letter.receiver}</span>
+                                                    </p>
                                                 </div>
 
-                                                {/* Content Body */}
-                                                <div className="text-xs text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200/60 leading-relaxed mb-3">
-                                                    {item.body}
+                                                <div class="flex items-center gap-2">
+                                                    <span class={`text-xs px-2.5 py-1 rounded-full font-bold ${letter.priority === 'فوری' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-700 text-slate-300'}`}>
+                                                        {letter.priority}
+                                                    </span>
+                                                    <span class="text-xs px-2.5 py-1 bg-indigo-600/30 text-indigo-300 rounded-full font-bold">
+                                                        {letter.status}
+                                                    </span>
                                                 </div>
-
-                                                {/* Thread Replies */}
-                                                {item.replies && item.replies.length > 0 && (
-                                                    <div className="mr-3 pl-2 border-r-2 border-indigo-400 space-y-2 mb-3">
-                                                        <span className="text-[11px] font-bold text-indigo-700 block mb-1">زنجیره پاسخ‌های مکتوب:</span>
-                                                        {item.replies.map((reply, idx) => (
-                                                            <div key={idx} className="bg-indigo-50/50 p-3 rounded-xl border border-indigo-100 text-xs">
-                                                                <div className="flex justify-between items-center text-[11px] font-bold text-slate-800 mb-1">
-                                                                    <span>{reply.sender}</span>
-                                                                    <span className="text-slate-400 font-normal">{reply.date}</span>
-                                                                </div>
-                                                                <p className="text-slate-600 leading-normal">{reply.body}</p>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                {/* Reply Form Box */}
-                                                {activeReplyId === item.id && (
-                                                    <div className="mt-4 bg-slate-100/80 p-4 rounded-2xl border border-slate-300 space-y-3">
-                                                        <h5 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                                            <i className="fa-solid fa-reply-all text-indigo-600"></i>
-                                                            ثبت پاسخ توسط {currentUser.name} ({roleObj?.title}):
-                                                        </h5>
-                                                        <textarea 
-                                                            rows="2"
-                                                            value={replyText}
-                                                            onChange={e => setReplyText(e.target.value)}
-                                                            placeholder="متن پاسخ رسمی را تایپ کنید..."
-                                                            className="w-full p-2.5 text-xs bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500"
-                                                        ></textarea>
-                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                                            <div className="flex items-center gap-2">
-                                                                <label className="text-xs font-bold text-slate-600">تغییر وضعیت سند:</label>
-                                                                <select 
-                                                                    value={replyStatus}
-                                                                    onChange={e => setReplyStatus(e.target.value)}
-                                                                    className="text-xs p-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 outline-none">
-                                                                    <option value="تأییدشده">تأییدشده</option>
-                                                                    <option value="در انتظار پاسخ">در انتظار پاسخ</option>
-                                                                    <option value="نیازمند اصلاح">نیازمند اصلاح</option>
-                                                                </select>
-                                                            </div>
-                                                            <div className="flex gap-2">
-                                                                <button 
-                                                                    onClick={() => setActiveReplyId(null)}
-                                                                    className="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-200">
-                                                                    انصراف
-                                                                </button>
-                                                                <button 
-                                                                    onClick={() => handleSendReply(item.id)}
-                                                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20">
-                                                                    ارسال و بایگانی
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
                                             </div>
-                                        ))}
-                                    </div>
+
+                                            {/* متن نامه */}
+                                            <p class="text-sm text-slate-300 leading-relaxed bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                                                {letter.text}
+                                            </p>
+
+                                            {/* زنجیره پاسخ‌ها */}
+                                            {letter.replies.length > 0 && (
+                                                <div class="space-y-2 pt-2 pr-4 border-r-2 border-indigo-500">
+                                                    <p class="text-xs font-semibold text-slate-400">پاسخ‌های ثبت‌شده:</p>
+                                                    {letter.replies.map((rep, rIdx) => (
+                                                        <div key={rIdx} class="bg-slate-900/80 p-3 rounded-xl text-xs space-y-1">
+                                                            <div class="flex justify-between text-indigo-300 font-bold">
+                                                                <span>{rep.sender}</span>
+                                                                <span class="text-slate-500 font-mono text-[10px]">{rep.date}</span>
+                                                            </div>
+                                                            <p class="text-slate-200">{rep.text}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* فرم ارسال پاسخ */}
+                                            <div class="pt-2 flex flex-col md:flex-row gap-2">
+                                                <input 
+                                                    type="text"
+                                                    placeholder="پاسخ خود را بنویسید..."
+                                                    value={replyText[letter.id] || ''}
+                                                    onChange={(e) => setReplyText({ ...replyText, [letter.id]: e.target.value })}
+                                                    class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                />
+                                                <select 
+                                                    value={replyStatus[letter.id] || ''}
+                                                    onChange={(e) => setReplyStatus({ ...replyStatus, [letter.id]: e.target.value })}
+                                                    class="bg-slate-900 border border-slate-700 rounded-xl px-2 py-2 text-xs text-slate-200">
+                                                    <option value="پاسخ داده شده">تغییر وضعیت: پاسخ داده شده</option>
+                                                    <option value="تأیید نهایی">تأیید نهایی مدیر</option>
+                                                    <option value="نیازمند اصلاح">نیازمند اصلاح</option>
+                                                </select>
+                                                <button 
+                                                    onClick={() => handleSendReply(letter.id)}
+                                                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-medium transition">
+                                                    ثبت پاسخ
+                                                </button>
+                                            </div>
+
+                                        </div>
+                                    ))}
                                 </div>
+
                             </div>
                         )}
 
-                        {activeTab === 'users' && isManager && (
-                            <div className="max-w-6xl mx-auto space-y-6">
-                                {/* Users Page Header */}
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex justify-between items-center">
-                                    <div>
-                                        <h1 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                                            <i className="fa-solid fa-users-gear text-indigo-600"></i>
-                                            مدیریت حساب پرسنل و دسترسی‌ها
-                                        </h1>
-                                        <p className="text-xs text-slate-500 mt-1">تعریف پرسنل جدید، بازنشانی رمز عبور و تغییر وضعیت فعال/غیرفعال حساب‌ها</p>
-                                    </div>
+                        {/* بخش ۲: فرم‌ها و قالب‌های آماده */}
+                        {activeTab === 'templates' && (
+                            <div class="space-y-6 max-w-5xl mx-auto">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white mb-1">فرم‌ها و گزارش‌های آماده مکاتبات</h3>
+                                    <p class="text-xs text-slate-400">برای تسریع در نامه‌نگاری می‌توانید از قالب‌های آماده زیر استفاده کنید:</p>
                                 </div>
 
-                                {/* Create New Employee */}
-                                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
-                                    <h2 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                        <i className="fa-solid fa-user-plus text-indigo-600"></i>
-                                        افزودن کارمند جدید به سیستم
-                                    </h2>
-                                    <form onSubmit={handleAddUser} className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">نام و نام خانوادگی</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="احمد رضایی"
-                                                value={newUser.name}
-                                                onChange={e => setNewUser({...newUser, name: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">نام کاربری ورود</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="a_rezaei"
-                                                value={newUser.username}
-                                                onChange={e => setNewUser({...newUser, username: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">رمز عبور اولیه</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="123"
-                                                value={newUser.password}
-                                                onChange={e => setNewUser({...newUser, password: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-bold text-slate-700 mb-1">نقش سازمانی</label>
-                                            <select 
-                                                value={newUser.role}
-                                                onChange={e => setNewUser({...newUser, role: e.target.value})}
-                                                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                                                {ROLES.map(role => (
-                                                    <option key={role.id} value={role.id}>{role.title}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="md:col-span-4 flex justify-end">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {templates.map(tpl => (
+                                        <div key={tpl.id} class="bg-slate-800 p-5 rounded-2xl border border-slate-700 flex flex-col justify-between space-y-3">
+                                            <div>
+                                                <h4 class="font-bold text-sm text-indigo-300">{tpl.title}</h4>
+                                                <p class="text-xs text-slate-400 mt-1">گیرنده پیش‌فرض: {tpl.receiver}</p>
+                                                <p class="text-xs text-slate-300 mt-2 bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50 line-clamp-3">
+                                                    {tpl.text}
+                                                </p>
+                                            </div>
                                             <button 
-                                                type="submit" 
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition">
-                                                افزودن و صدور حساب
+                                                onClick={() => applyTemplate(tpl)}
+                                                class="w-full py-2 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/30 rounded-xl text-xs font-semibold transition">
+                                                استفاده از این فرم در نامه جدید
                                             </button>
                                         </div>
-                                    </form>
+                                    ))}
                                 </div>
 
-                                {/* Employee Table */}
-                                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-                                    <table className="w-full text-right border-collapse">
-                                        <thead className="bg-slate-50 text-slate-500 text-xs font-bold border-b border-slate-200">
+                                {/* تعریف فرم جدید توسط مدیران */}
+                                {currentUser.isManager && (
+                                    <div class="mt-8 bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+                                        <h4 class="font-bold text-sm text-white flex items-center gap-2">
+                                            <i class="fa-solid fa-plus text-indigo-400"></i>
+                                            <span>تعریف فرم / الگوی جدید توسط مدیر</span>
+                                        </h4>
+                                        <form onSubmit={handleCreateTemplate} class="space-y-3">
+                                            <input 
+                                                type="text" 
+                                                required
+                                                placeholder="عنوان فرم آماده (مثلا: گزارش خرابی کوره)"
+                                                value={newTplTitle}
+                                                onChange={(e) => setNewTplTitle(e.target.value)}
+                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
+                                            />
+                                            <input 
+                                                type="text" 
+                                                required
+                                                placeholder="موضوع پیش‌فرض"
+                                                value={newTplSubject}
+                                                onChange={(e) => setNewTplSubject(e.target.value)}
+                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
+                                            />
+                                            <textarea 
+                                                rows="2"
+                                                required
+                                                placeholder="متن الگوی آماده..."
+                                                value={newTplText}
+                                                onChange={(e) => setNewTplText(e.target.value)}
+                                                class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200"
+                                            ></textarea>
+                                            <button type="submit" class="px-4 py-2 btn-gradient text-white rounded-xl text-xs font-medium">
+                                                ذخیره فرم آماده جدید
+                                            </button>
+                                        </form>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* بخش ۳: مدیریت دسترسی پرسنل */}
+                        {activeTab === 'users' && currentUser.isManager && (
+                            <div class="space-y-6 max-w-5xl mx-auto">
+                                <div>
+                                    <h3 class="text-lg font-bold text-white mb-1">مدیریت پرسنل و دسترسی‌های ورود</h3>
+                                    <p class="text-xs text-slate-400">امکان فعال/غیرفعال‌سازی دسترسی ورود کاربران به سامانه:</p>
+                                </div>
+
+                                <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-x-auto">
+                                    <table class="w-full text-right text-xs">
+                                        <thead class="bg-slate-900 text-slate-400">
                                             <tr>
-                                                <th className="p-4">نام کارمند</th>
-                                                <th className="p-4">نام کاربری</th>
-                                                <th className="p-4">رمز عبور فعلی</th>
-                                                <th className="p-4">نقش سازمانی</th>
-                                                <th className="p-4">وضعیت</th>
-                                                <th className="p-4">عملیات حساب</th>
+                                                <th class="p-4">نام پرسنل</th>
+                                                <th class="p-4">نام کاربری</th>
+                                                <th class="p-4">نقش سازمانی</th>
+                                                <th class="p-4">وضعیت دسترسی</th>
+                                                <th class="p-4">عملیات مدیر</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-100 text-xs">
-                                            {users.map(u => (
-                                                <tr key={u.id} className="hover:bg-slate-50/60">
-                                                    <td className="p-4 font-bold text-slate-800">{u.name}</td>
-                                                    <td className="p-4 font-mono text-slate-600">{u.username}</td>
-                                                    <td className="p-4 font-mono text-slate-400">
-                                                        {resetPasswordId === u.id ? (
-                                                            <div className="flex items-center gap-1">
-                                                                <input 
-                                                                    type="text" 
-                                                                    value={newPasswordValue}
-                                                                    onChange={e => setNewPasswordValue(e.target.value)}
-                                                                    placeholder="رمز جدید"
-                                                                    className="w-20 p-1 border rounded text-xs"
-                                                                />
-                                                                <button onClick={() => handleResetPassword(u.id)} className="bg-indigo-600 text-white px-2 py-1 rounded text-[10px]">ذخیره</button>
-                                                            </div>
-                                                        ) : (
-                                                            <span>{u.password}</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4 text-indigo-600 font-bold">
-                                                        {ROLES.find(r => r.id === u.role)?.title}
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <span className={`px-2.5 py-1 rounded-lg font-bold text-[10px] ${
-                                                            u.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                                        }`}>
-                                                            {u.active ? 'فعال' : 'غیرفعال'}
+                                        <tbody class="divide-y divide-slate-700 text-slate-200">
+                                            {usersList.map(u => (
+                                                <tr key={u.id}>
+                                                    <td class="p-4 font-bold">{u.name}</td>
+                                                    <td class="p-4 font-mono text-indigo-300">{u.username}</td>
+                                                    <td class="p-4">{u.role}</td>
+                                                    <td class="p-4">
+                                                        <span class={`px-2 py-1 rounded-full text-[10px] font-bold ${u.active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                            {u.active ? 'فعال' : 'غیرفعال شده'}
                                                         </span>
                                                     </td>
-                                                    <td className="p-4 flex items-center gap-2">
+                                                    <td class="p-4">
                                                         <button 
-                                                            onClick={() => handleToggleUserStatus(u.id)}
-                                                            className={`px-3 py-1.5 rounded-xl font-bold border transition text-[11px] ${
-                                                                u.active 
-                                                                    ? 'bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100' 
-                                                                    : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
-                                                            }`}>
-                                                            {u.active ? 'غیرفعال کردن' : 'فعال کردن'}
-                                                        </button>
-                                                        <button 
-                                                            onClick={() => { setResetPasswordId(u.id); setNewPasswordValue(u.password); }}
-                                                            className="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-xl border border-slate-200 font-bold text-[11px]">
-                                                            تغییر رمز
+                                                            onClick={() => toggleUserStatus(u.id)}
+                                                            class={`px-3 py-1 rounded-lg text-[11px] font-semibold transition ${u.active ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30' : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/30'}`}>
+                                                            {u.active ? 'غیرفعال کردن' : 'فعال‌سازی دسترسی'}
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -723,12 +640,14 @@
                                 </div>
                             </div>
                         )}
-                    </main>
+
+                    </div>
                 </div>
             );
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const root = ReactDOM.createRoot(document.getElementById('app'));
+        root.render(<App />);
     </script>
 </body>
 </html>
